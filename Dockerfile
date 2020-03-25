@@ -20,7 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-FROM openjdk:8-jdk
+FROM adoptopenjdk:8u242-b08-jdk-hotspot-bionic
 MAINTAINER Oleg Nenashev <o.v.nenashev@gmail.com>
 
 ARG VERSION=3.29
@@ -36,8 +36,14 @@ LABEL Description="This is a base image, which provides the Jenkins agent execut
 
 ARG AGENT_WORKDIR=/home/${user}/agent
 
-RUN echo 'deb http://deb.debian.org/debian stretch-backports main' > /etc/apt/sources.list.d/stretch-backports.list
-RUN apt-get update && apt-get install git-lfs
+RUN build_deps="curl" && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${build_deps} ca-certificates && \
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git-lfs && \
+    git lfs install && \
+    rm -r /var/lib/apt/lists/*
+
 RUN curl --create-dirs -fsSLo /usr/share/jenkins/slave.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar \
   && chmod 755 /usr/share/jenkins \
   && chmod 644 /usr/share/jenkins/slave.jar
