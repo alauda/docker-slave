@@ -35,11 +35,23 @@ LABEL Description="This is a base image, which provides the Jenkins agent execut
 ARG AGENT_WORKDIR=/home/${user}/agent
 
 RUN echo 'deb http://deb.debian.org/debian stretch-backports main' > /etc/apt/sources.list.d/stretch-backports.list
-RUN apt-get update && apt-get install git-lfs && rm -rf /var/lib/apt/lists/*
 RUN curl --create-dirs -fsSLo /usr/share/jenkins/agent.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar \
   && chmod 755 /usr/share/jenkins \
   && chmod 644 /usr/share/jenkins/agent.jar \
   && ln -sf /usr/share/jenkins/agent.jar /usr/share/jenkins/slave.jar
+
+RUN ARCH= && ARCH_ALIAS= && dpkgArch="$(dpkg --print-architecture)" \
+  && case "${dpkgArch##*-}" in \
+    amd64) ARCH='x64'; apt-get update && apt-get install git-lfs && rm -rf /var/lib/apt/lists/* ;; \
+    x86_64) ARCH='x64'; apt-get update && apt-get install git-lfs && rm -rf /var/lib/apt/lists/* ;; \
+    aarch64) ARCH='arm64'; wget https://github.com/git-lfs/git-lfs/releases/download/v2.12.0/git-lfs-linux-arm64-v2.12.0.tar.gz; tar xzvf git-lfs-linux-arm64-v2.12.0.tar.gz; ./install.sh ;; \
+    ppc64el) ARCH='ppc64le'; ARCH_ALIAS='ppc64le';; \
+    s390x) ARCH='s390x'; ARCH_ALIAS='s390x';; \
+    arm64) ARCH='arm64'; wget https://github.com/git-lfs/git-lfs/releases/download/v2.12.0/git-lfs-linux-arm64-v2.12.0.tar.gz; tar xzvf git-lfs-linux-arm64-v2.12.0.tar.gz; ./install.sh ;; \
+    armhf) ARCH='armv7l'; ARCH_ALIAS='armv7l';; \
+    i386) ARCH='x86'; ARCH_ALIAS='x86';; \
+    *) echo "unsupported architecture"; exit 1 ;; \
+  esac && \
 
 USER ${user}
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
