@@ -51,7 +51,7 @@ RUN ARCH= && ARCH_ALIAS= && dpkgArch="$(dpkg --print-architecture)" \
     armhf) ARCH='armv7l'; ARCH_ALIAS='armv7l';; \
     i386) ARCH='x86'; ARCH_ALIAS='x86';; \
     *) echo "unsupported architecture"; exit 1 ;; \
-  esac && \
+  esac
 
 USER ${user}
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
